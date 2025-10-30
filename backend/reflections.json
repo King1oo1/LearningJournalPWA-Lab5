@@ -1,7 +1,7 @@
 [
   {
     "name": "Chandandeep Singh",
-    "date": "Sat Nov 01 2025",
-    "reflection": "I learned about Python JSON integration and how to create backend data storage for web applications."
+    "date": "Sat Nov 1 2025",
+    "reflection": "This is an example entry created using the Python backend. Run 'python backend/save_entry.py' to add more entries!"
   }
 ]
