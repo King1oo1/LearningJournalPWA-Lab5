@@ -1,0 +1,2 @@
+# Python requirements for the Learning Journal Backend
+# No external dependencies needed for basic JSON functionality

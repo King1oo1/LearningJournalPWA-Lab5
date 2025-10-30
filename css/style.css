@@ -1303,3 +1303,115 @@ body {
         display: block;
     }
 }
+
+/* ===== REFLECTION COUNTER STYLES ===== */
+.reflection-counter {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 1.5rem;
+    border-radius: 12px;
+    margin: 2rem 0;
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+}
+
+.reflection-counter h3 {
+    margin: 0 0 1rem 0;
+    text-align: center;
+    font-size: 1.3rem;
+}
+
+.counter-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+}
+
+.counter-item {
+    text-align: center;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    backdrop-filter: blur(10px);
+}
+
+.counter-number {
+    display: block;
+    font-size: 2rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+}
+
+.counter-label {
+    font-size: 0.9rem;
+    opacity: 0.9;
+}
+
+.dark-theme .reflection-counter {
+    background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+}
+
+/* ===== JSON SOURCE INDICATOR ===== */
+.journal-entry[data-source="json"] {
+    border-left: 4px solid #27ae60;
+}
+
+.journal-entry[data-source="json"] .collapsible-header {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e8f5e8 100%);
+}
+
+.dark-theme .journal-entry[data-source="json"] {
+    border-left-color: #2ecc71;
+}
+
+.dark-theme .journal-entry[data-source="json"] .collapsible-header {
+    background: linear-gradient(135deg, #2d2d2d 0%, #1e2f1e 100%);
+}
+
+/* ===== PYTHON BACKEND INFO SECTION ===== */
+.python-backend-section {
+    background: var(--card-bg);
+    padding: 2rem;
+    border-radius: 12px;
+    margin: 2rem 0;
+    border: 2px solid #e9ecef;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.python-backend-section h3 {
+    color: #2c3e50;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.python-backend-section code {
+    background: #f8f9fa;
+    padding: 0.2rem 0.4rem;
+    border-radius: 4px;
+    font-family: 'Courier New', monospace;
+    color: #e83e8c;
+}
+
+.dark-theme .python-backend-section code {
+    background: #2d2d2d;
+    color: #ff7bac;
+}
+
+.backend-steps {
+    margin: 1.5rem 0;
+}
+
+.backend-step {
+    margin-bottom: 1rem;
+    padding-left: 1.5rem;
+    position: relative;
+}
+
+.backend-step:before {
+    content: '▸';
+    position: absolute;
+    left: 0;
+    color: #667eea;
+    font-weight: bold;
+}

@@ -502,6 +502,8 @@ function showSuccessMessage(message) {
     }, 3000);
 }
 
+
+
 // ===== ENHANCED INITIALIZATION =====
 document.addEventListener('DOMContentLoaded', function() {
     console.log('DOM loaded - initializing enhanced features');
@@ -532,6 +534,9 @@ document.addEventListener('DOMContentLoaded', function() {
         initEditFunctionality();
         initDeleteFunctionality();
         
+        // NEW: Initialize JSON features after everything else is set up
+        initJSONFeatures();
+        
         console.log('All enhanced features initialized successfully!');
         
         // Debug: Log all copy buttons found
@@ -540,6 +545,84 @@ document.addEventListener('DOMContentLoaded', function() {
         
     }, 100);
 });
+
+// ===== NEW JSON FEATURES INITIALIZATION =====
+async function initJSONFeatures() {
+    console.log('Initializing JSON features...');
+    
+    try {
+        // Fetch and display JSON reflections
+        const jsonReflections = await fetchJSONReflections();
+        displayJSONReflections(jsonReflections);
+        
+        // Update counter
+        updateReflectionCounter();
+        
+        // Re-initialize collapsible sections for new entries
+        initCollapsibleSections();
+        initClipboardAPI();
+        
+        console.log('JSON features initialized successfully!');
+        
+    } catch (error) {
+        console.error('Error initializing JSON features:', error);
+    }
+}
+
+// ===== GLOBAL FUNCTIONS FOR JSON INTERACTION =====
+// Make these functions available globally for HTML onclick attributes
+window.refreshJSONData = async function() {
+    try {
+        const jsonReflections = await fetchJSONReflections();
+        
+        // Remove existing JSON entries
+        document.querySelectorAll('.journal-entry[data-source="json"]').forEach(entry => {
+            entry.remove();
+        });
+        
+        // Display updated JSON reflections
+        displayJSONReflections(jsonReflections);
+        updateReflectionCounter();
+        
+        // Re-initialize features
+        initCollapsibleSections();
+        initClipboardAPI();
+        
+        showSuccessMessage('JSON data refreshed successfully!');
+    } catch (error) {
+        console.error('Error refreshing JSON data:', error);
+        alert('Error refreshing JSON data. Please check the console for details.');
+    }
+};
+
+window.showBackendInfo = function() {
+    const infoDiv = document.getElementById('backend-info');
+    const totalEntries = document.querySelectorAll('.journal-entry').length;
+    const jsonEntries = document.querySelectorAll('.journal-entry[data-source="json"]').length;
+    const localEntries = document.querySelectorAll('.journal-entry[data-is-new="true"]').length;
+    const staticEntries = totalEntries - jsonEntries - localEntries;
+    
+    infoDiv.style.display = 'block';
+    infoDiv.innerHTML = `
+        <h4>📊 Backend Information</h4>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin: 1rem 0;">
+            <div><strong>Total Entries:</strong></div>
+            <div>${totalEntries}</div>
+            <div><strong>JSON Entries:</strong></div>
+            <div>${jsonEntries}</div>
+            <div><strong>Local Entries:</strong></div>
+            <div>${localEntries}</div>
+            <div><strong>Static Entries:</strong></div>
+            <div>${staticEntries}</div>
+        </div>
+        <p><strong>JSON File:</strong> <code>backend/reflections.json</code></p>
+        <p><strong>Python Script:</strong> <code>backend/save_entry.py</code></p>
+        <p><strong>Usage:</strong> Run the Python script in terminal to add new reflections</p>
+        <button onclick="this.parentElement.style.display='none'" class="btn-primary" style="margin-top: 1rem;">
+            Close
+        </button>
+    `;
+};
 
 // Add keyframes for animations
 const style = document.createElement('style');
@@ -616,8 +699,124 @@ style.textContent = `
         background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%) !important;
         box-shadow: 0 3px 10px rgba(149, 165, 166, 0.3) !important;
     }
+    
+    /* JSON Entry Styles */
+    .journal-entry[data-source="json"] {
+        border-left: 4px solid #27ae60;
+    }
+    
+    .journal-entry[data-source="json"] .collapsible-header {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e8f5e8 100%);
+    }
+    
+    .dark-theme .journal-entry[data-source="json"] {
+        border-left-color: #2ecc71;
+    }
+    
+    .dark-theme .journal-entry[data-source="json"] .collapsible-header {
+        background: linear-gradient(135deg, #2d2d2d 0%, #1e2f1e 100%);
+    }
+    
+    /* Reflection Counter Styles */
+    .reflection-counter {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 1.5rem;
+        border-radius: 12px;
+        margin: 2rem 0;
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+    }
+    
+    .reflection-counter h3 {
+        margin: 0 0 1rem 0;
+        text-align: center;
+        font-size: 1.3rem;
+    }
+    
+    .counter-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 1rem;
+    }
+    
+    .counter-item {
+        text-align: center;
+        padding: 1rem;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 8px;
+        backdrop-filter: blur(10px);
+    }
+    
+    .counter-number {
+        display: block;
+        font-size: 2rem;
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+    }
+    
+    .counter-label {
+        font-size: 0.9rem;
+        opacity: 0.9;
+    }
+    
+    .dark-theme .reflection-counter {
+        background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+    }
+    
+    /* Python Backend Section Styles */
+    .python-backend-section {
+        background: var(--card-bg);
+        padding: 2rem;
+        border-radius: 12px;
+        margin: 2rem 0;
+        border: 2px solid #e9ecef;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    
+    .python-backend-section h3 {
+        color: #2c3e50;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .backend-actions {
+        display: flex;
+        gap: 1rem;
+        margin-top: 1.5rem;
+        flex-wrap: wrap;
+    }
+    
+    .backend-steps {
+        margin: 1.5rem 0;
+    }
+    
+    .backend-step {
+        margin-bottom: 1rem;
+        padding-left: 1.5rem;
+        position: relative;
+    }
+    
+    .backend-step:before {
+        content: '▸';
+        position: absolute;
+        left: 0;
+        color: #667eea;
+        font-weight: bold;
+    }
+    
+    .dark-theme .python-backend-section {
+        border-color: #404040;
+    }
+    
+    .json-error {
+        color: #e74c3c;
+        background: rgba(231, 76, 60, 0.1);
+        padding: 1rem;
+        border-radius: 8px;
+        margin-top: 1rem;
+        border-left: 4px solid #e74c3c;
+    }
 `;
 document.head.appendChild(style);
-
-
-
