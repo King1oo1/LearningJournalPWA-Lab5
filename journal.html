@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Journal - Chandandeep Singh</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- Navigation will be inserted here by JavaScript -->
+    
+     
+    <main class="container">
+        <h1>Learning Journal</h1>
+        
+        <!-- New Journal Entry Form -->
+        <section class="journal-form-section">
+            <h2>Add New Journal Entry</h2>
+            <p class="form-description">Fill out the form below to add a new journal entry. Your entry will appear at the top of the journal.</p>
+            <form id="journal-form">
+                <div class="form-group">
+                    <label for="journal-title">Title:</label>
+                    <input type="text" id="journal-title" name="title" placeholder="e.g., Week 4" required>
+                </div>
+                <div class="form-group">
+                    <label for="journal-entry">Entry Content:</label>
+                    <textarea id="journal-entry" name="entry" rows="6" 
+                              placeholder="Write your journal entry here (minimum 10 words)..." 
+                              required></textarea>
+                    <small>Minimum 10 words required. Your entry will be displayed below.</small>
+                </div>
+                <button type="submit" class="btn-primary">Add Journal Entry</button>
+            </form>
+        </section>
+        
+<!-- Journal Entries Container - NEWEST FIRST -->
+<div id="journal-entries-container">
+    <!-- Week 4 Entry (NEWEST) - NO DELETE BUTTON -->
+    <article class="journal-entry collapsible">
+        <div class="collapsible-header">
+            <h2>Week 4: Introduction to APIs</h2>
+            <div class="entry-actions">
+                <span class="toggle-icon">▼</span>
+            </div>
+        </div>
+        <div class="collapsible-content">
+            <div class="entry-meta">October 2025</div>   
+            <h3>Which Storage, Browser, and Third-Party APIs did you choose, and why?</h3>
+            <p><strong>Storage API:</strong> Enhanced local storage for journal entries and theme choices, including Session Storage as a backup option. It was chosen for its simplicity and widespread browser support.</p>
+            <p><strong>Browser API:</strong> Clipboard API for copying journal entries and improved Validation API for form validation. These considerably improve the overall user experience.</p>
+            <p><strong>Third-Party API:</strong> The YouTube Player API allows you to connect with educational videos. We choose video content since it improves the learning experience.</p>
+            
+            <h3>How did you integrate each API with DOM manipulation?</h3>
+            <p><strong>Storage API:</strong> localStorage.setItem() saves data and then dynamically builds DOM elements on load.</p>
+            <p><strong>Clipboard API:</strong> Added copy buttons to journal entries that use navigator.clipboard.writeText() and provide visual feedback.</p>
+            <p><strong>YouTube API:</strong> YT.Player() generates embedded video, custom buttons manage player using API functions.</p>
+            
+            <h3>What challenges did you encounter, and how did you solve them?</h3>
+            <p><strong>Clipboard API permissions:</strong> Some browsers require a secure context (HTTPS). Error handling and backup messages were included.</p>
+            <p><strong>YouTube API loading:</strong> The API script needed to load before being initialised. I used the onYouTubeIframeAPIReady callback.</p>
+            <p><strong>Overlapping buttons:</strong> Stop button moved off-screen; corrected with CSS Grid and responsive layouts.</p>
+            
+            <h3>In what ways do these APIs improve your Learning Journal PWA?</h3>
+            <p><strong>Persistence:</strong> When the browser is closed, users' entries and preferences are saved.</p>
+            <p><strong>Usability:</strong> One-click copying and quick form response.</p>
+            <p><strong>Rich Content:</strong> Video integration improves learning.</p>
+            <p><strong>Professional appearance:</strong> Native app experience with smooth interactions.</p>
+        </div>
+    </article>
+
+    <!-- Week 3 Entry - NO DELETE BUTTON -->
+    <article class="journal-entry collapsible">
+        <div class="collapsible-header">
+            <h2>Week 3: JavaScript & DOM Manipulation</h2>
+            <div class="entry-actions">
+                <span class="toggle-icon">▼</span>
+            </div>
+        </div>
+        <div class="collapsible-content">
+            <div class="entry-meta">October 2025</div>   
+            <h3>Which DOM selection methods did you use, and why did you choose them?</h3>
+            <p>I used getElementById() for single items such as the live date and theme toggle because it is quick and precise. Due to its flexibility and ability to take CSS selectors, I also utilised querySelectorAll() for many items, such as collapsable sections.</p>
+            
+            <h3>What was the most challenging part about linking JavaScript with your HTML?</h3>
+            <p>The most difficult aspect was ensuring that the JavaScript loaded at the appropriate time and that all DOM elements were available when the scripts attempted to access them. This timing issue was resolved by using the DOMContentLoaded event.</p>
+            
+            <h3>How did you test and debug your JavaScript code?</h3>
+            <p>I used browser developer tools extensively, including console.log for debugging data, the Elements tab for checking DOM structure, and for myself testing all interactive features on various screen sizes to verify responsiveness.</p>
+        </div>
+    </article>
+
+    <!-- Week 2 Entry - NO DELETE BUTTON -->
+    <article class="journal-entry collapsible">
+        <div class="collapsible-header">
+            <h2>Week 2: Frontend Fundamentals</h2>
+            <div class="entry-actions">
+                <span class="toggle-icon">▼</span>
+            </div>
+        </div>
+        <div class="collapsible-content">
+            <div class="entry-meta">October 2025</div> 
+            <h3>Mobile-First Design Approach</h3>
+            <p>I began by designing with mobile devices in mind, utilising a layout with one column that eventually expands on larger screens. This method ensured that the essential content and functionality worked flawlessly on reduced viewports.</p>
+            
+            <h3>Most Useful HTML/CSS Concept</h3>
+            <p>The CSS Flexbox concept was the most helpful one I used to create responsive layout structures and navigation. With Flexbox, creating flexible components that adjust to various screen sizes without requiring intricate computations was simple.</p>
+            
+            <h3>Most Challenging Aspect</h3>
+            <p>The hardest things for me were choosing a breakpoint and media queries. To enable smooth transitions between layouts, the ideal breakpoints for various devices needed to be tested and adjusted.</p>
+        </div>
+    </article>
+
+    <!-- Week 1 Entry (OLDEST) - NO DELETE BUTTON -->
+    <article class="journal-entry collapsible">
+        <div class="collapsible-header">
+            <h2>Week 1: Introduction to Mobile Development</h2>
+            <div class="entry-actions">
+                <span class="toggle-icon">▼</span>
+            </div>
+        </div>
+        <div class="collapsible-content">
+            <div class="entry-meta">September 2025</div>
+            <p>Initial setup and understanding of Progressive Web Apps. Learned about the course structure and project requirements. Explored the basics of HTML and CSS for creating responsive web layouts.</p>
+            
+            <h3>Key Learnings</h3>
+            <p>Understood the importance of Progressive Web Apps in modern web development and how they bridge the gap between web and mobile applications. Learned about the project requirements for the Learning Journal PWA.</p>
+            
+            <h3>Setup Process</h3>
+            <p>Set up the initial project structure with proper folder organization, created the basic HTML pages, and established the GitHub repository for version control.</p>
+        </div>
+    </article>
+</div>
+
+ <!-- Enhanced YouTube API Section -->
+<section class="youtube-section">
+    <h2>🎬 Learning Resources</h2>
+    <p>Watch this tutorial video about JavaScript APIs to enhance your understanding:</p>
+    
+    <div class="youtube-player-container">
+        <div id="youtube-player"></div>
+    </div>
+    
+    <div id="youtube-controls">
+        <!-- Enhanced controls will be added by JavaScript -->
+    </div>
+    
+    <div class="storage-demo">
+        <h4>💾 Storage API Demo</h4>
+        <p>Your journal entries and theme preferences are automatically saved using the Web Storage API (Local Storage & Session Storage).</p>
+        <button onclick="showStorageInfo()" class="btn-primary">Show Storage Information</button>
+        <div id="storage-info" style="margin-top: 1rem; padding: 1rem; background: rgba(255,255,255,0.1); border-radius: 8px;"></div>
+    </div>
+  </section>
+</main>
+
+
+    <footer class="footer">
+        <p>&copy; 2025 Chandandeep Singh. All rights reserved.</p>
+    </footer>
+
+<!-- ALL THE JS FILES - IN CORRECT ORDER -->
+<script src="js/storage.js"></script>
+<script src="js/browser.js"></script>
+<script src="js/thirdparty.js"></script>
+<script src="js/script.js"></script>
+
+</body>
+</html>
