@@ -1,5 +1,7 @@
 // js/browser.js - Browser API Functions
 
+// js/browser.js - Browser API Functions
+
 // ===== BROWSER API: CLIPBOARD API =====
 function initClipboardAPI() {
     console.log('Initializing Clipboard API...');
@@ -24,7 +26,7 @@ function initClipboardAPI() {
             if (contentElement) {
                 // Get text content from the collapsible content excluding buttons
                 const contentClone = contentElement.cloneNode(true);
-                const buttons = contentClone.querySelectorAll('button, .entry-footer');
+                const buttons = contentClone.querySelectorAll('button, .entry-footer, .delete-btn, .edit-btn');
                 buttons.forEach(btn => btn.remove());
                 content = contentClone.textContent || '';
             }
@@ -104,6 +106,7 @@ function fallbackCopyText(text, button) {
         document.body.removeChild(textArea);
     }
 }
+
 
 // ===== BROWSER API: VALIDATION API ENHANCEMENT =====
 function initEnhancedValidation() {
