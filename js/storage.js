@@ -38,60 +38,27 @@ function displayLocalEntries(entries) {
     const container = document.getElementById('journal-entries-container');
     if (!container || entries.length === 0) return;
 
-    // Find the position to insert local entries (after JSON entries, before Week 5)
-    const jsonEntries = document.querySelectorAll('.journal-entry[data-source="json"]');
-    const week5Entry = document.querySelector('.journal-entry:not([data-source="json"]):not([data-is-new="true"])');
-    
-    let insertPosition = container;
-    
-    if (jsonEntries.length > 0) {
-        // Insert after the last JSON entry
-        insertPosition = jsonEntries[jsonEntries.length - 1];
-    } else if (week5Entry) {
-        // Insert before Week 5 if no JSON entries
-        insertPosition = week5Entry;
-    }
+    console.log('Displaying local entries:', entries.length);
 
     // Display local entries (newest first)
     entries.reverse().forEach(entry => {
         const entryHTML = createLocalJournalEntry(entry.title, entry.content, entry.date, entry.id);
         
-        if (insertPosition === container) {
-            container.insertAdjacentHTML('afterbegin', entryHTML);
+        // Insert after JSON entries but before static weeks
+        const jsonEntries = document.querySelectorAll('.journal-entry[data-source="json"]');
+        const firstStaticEntry = document.querySelector('.journal-entry:not([data-source="json"]):not([data-is-new="true"])');
+        
+        if (jsonEntries.length > 0) {
+            // Insert after the last JSON entry
+            jsonEntries[jsonEntries.length - 1].insertAdjacentHTML('afterend', entryHTML);
+        } else if (firstStaticEntry) {
+            // Insert before the first static entry if no JSON entries
+            firstStaticEntry.insertAdjacentHTML('beforebegin', entryHTML);
         } else {
-            insertPosition.insertAdjacentHTML('afterend', entryHTML);
-            insertPosition = insertPosition.nextElementSibling;
+            // Insert at the beginning if no other entries
+            container.insertAdjacentHTML('afterbegin', entryHTML);
         }
     });
-}
-
-function createLocalJournalEntry(title, content, date, entryId = null) {
-    const id = entryId || 'local-' + Date.now();
-    
-    return `
-        <article class="journal-entry collapsible" data-entry-id="${id}" data-is-new="true">
-            <div class="collapsible-header">
-                <h2>${title}</h2>
-                <div class="header-spacer"></div>
-                <div class="entry-actions">
-                    <span class="toggle-icon">▼</span>
-                    <button class="edit-btn" type="button">✏️ Edit</button>
-                    <button class="copy-btn" type="button">📋 Copy</button>
-                </div>
-            </div>
-            <div class="collapsible-content">
-                <div class="entry-meta">${date} • Local Storage</div>
-                <div class="entry-content">
-                    ${content}
-                </div>
-                <div style="margin-top: 1.5rem; text-align: center;">
-                    <button class="delete-btn" type="button" data-entry-id="${id}">
-                        🗑️ Delete Entry
-                    </button>
-                </div>
-            </div>
-        </article>
-    `;
 }
 
 // ===== THEME STORAGE =====
@@ -415,3 +382,4 @@ window.showBackendInfo = showBackendInfo;
 window.exportJSONData = exportJSONData;
 window.showStorageInfo = showStorageInfo;
 window.saveJournalEntries = saveJournalEntries;
+window.updateReflectionCounter = updateReflectionCounter;

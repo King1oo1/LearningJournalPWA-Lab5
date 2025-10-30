@@ -46,9 +46,9 @@ function ensureHeaderStructure() {
         toggleIcon.setAttribute('aria-label', 'Toggle section');
         entryActions.appendChild(toggleIcon);
         
-        // Add edit button only for new entries
-        const isNewEntry = entry.getAttribute('data-is-new') === 'true';
-        if (isNewEntry) {
+        // Add edit button only for local entries
+        const isLocalEntry = entry.getAttribute('data-is-new') === 'true';
+        if (isLocalEntry) {
             const editBtn = document.createElement('button');
             editBtn.className = 'edit-btn';
             editBtn.innerHTML = '✏️ Edit';
@@ -56,7 +56,7 @@ function ensureHeaderStructure() {
             entryActions.appendChild(editBtn);
         }
         
-        // Add copy button
+        // Add copy button for all entries
         const copyBtn = document.createElement('button');
         copyBtn.className = 'copy-btn';
         copyBtn.innerHTML = '📋 Copy';
@@ -87,82 +87,6 @@ function ensureCopyButton(header, entry) {
             entryActions.appendChild(copyBtn);
         }
     }
-}
-
-
-// ===== FORM VALIDATION AND SUBMISSION =====
-function initFormValidation() {
-    const journalForm = document.getElementById('journal-form');
-    
-    if (journalForm) {
-        journalForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const titleInput = document.getElementById('journal-title');
-            const entryInput = document.getElementById('journal-entry');
-            const title = titleInput.value.trim();
-            const content = entryInput.value.trim();
-            
-            // Validation
-            if (!title) {
-                alert('Please enter a title for your journal entry.');
-                titleInput.focus();
-                return false;
-            }
-            
-            if (content.length < 50) {
-                alert(`Please write at least 50 characters. You currently have ${content.length} characters.`);
-                entryInput.focus();
-                return false;
-            }
-            
-            // Create and save new entry
-            const now = new Date();
-            const dateString = now.toLocaleDateString('en-US', { 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric' 
-            });
-            
-            const newEntryHTML = createLocalJournalEntry(title, content, dateString);
-            const journalFormSection = document.querySelector('.journal-form-section');
-            if (journalFormSection) {
-                journalFormSection.insertAdjacentHTML('afterend', newEntryHTML);
-            }
-            
-            // Re-initialize features for new entry
-            ensureHeaderStructure();
-            initCollapsibleSections();
-            initEditFunctionality();
-            initDeleteFunctionality();
-            initClipboardAPI();
-            saveJournalEntries();
-            updateReflectionCounter();
-            
-            showSuccessMessage('Journal entry added successfully!');
-            journalForm.reset();
-            updateWordCount('');
-            
-            return true;
-        });
-    }
-}
-
-function updateWordCount(text) {
-    let wordCountEl = document.getElementById('word-count');
-    if (!wordCountEl) {
-        wordCountEl = document.createElement('div');
-        wordCountEl.id = 'word-count';
-        wordCountEl.className = 'word-count';
-        const entryInput = document.getElementById('journal-entry');
-        if (entryInput) {
-            entryInput.parentNode.appendChild(wordCountEl);
-        }
-    }
-    
-    const charCount = text.length;
-    wordCountEl.textContent = `Character count: ${charCount}`;
-    wordCountEl.className = `word-count ${charCount >= 50 ? 'valid' : 'invalid'}`;
 }
 
 // ===== EDIT JOURNAL ENTRIES FUNCTIONALITY =====
@@ -359,6 +283,7 @@ function confirmDeleteEntry(entryId) {
                 setTimeout(() => {
                     entry.remove();
                     saveJournalEntries();
+                    updateReflectionCounter();
                     
                     // Show success message
                     showSuccessMessage('Journal entry deleted successfully!');
@@ -376,6 +301,14 @@ function initFormValidation() {
     const journalForm = document.getElementById('journal-form');
     
     if (journalForm) {
+        // Add input event for character count
+        const entryInput = document.getElementById('journal-entry');
+        if (entryInput) {
+            entryInput.addEventListener('input', function() {
+                updateWordCount(this.value);
+            });
+        }
+        
         journalForm.addEventListener('submit', function(e) {
             e.preventDefault();
             
@@ -384,22 +317,15 @@ function initFormValidation() {
             const title = titleInput.value.trim();
             const content = entryInput.value.trim();
             
-            // Use Validation API
-            if (!titleInput.checkValidity()) {
-                titleInput.reportValidity();
+            // Validation
+            if (!title) {
+                alert('Please enter a title for your journal entry.');
+                titleInput.focus();
                 return false;
             }
             
-            if (!entryInput.checkValidity()) {
-                entryInput.reportValidity();
-                return false;
-            }
-            
-            // Count words
-            const wordCount = content.split(/\s+/).filter(word => word.length > 0).length;
-            
-            if (wordCount < 10) {
-                alert(`Please write at least 10 words. You currently have ${wordCount} words.`);
+            if (content.length < 50) {
+                alert(`Please write at least 50 characters. You currently have ${content.length} characters.`);
                 entryInput.focus();
                 return false;
             }
@@ -412,7 +338,7 @@ function initFormValidation() {
                 day: 'numeric' 
             });
             
-            const newEntryHTML = createJournalEntry(title, content, dateString, true);
+            const newEntryHTML = createLocalJournalEntry(title, content, dateString);
             const journalFormSection = document.querySelector('.journal-form-section');
             if (journalFormSection) {
                 journalFormSection.insertAdjacentHTML('afterend', newEntryHTML);
@@ -422,7 +348,10 @@ function initFormValidation() {
             ensureHeaderStructure();
             initCollapsibleSections();
             initEditFunctionality();
+            initDeleteFunctionality();
+            initClipboardAPI();
             saveJournalEntries();
+            updateReflectionCounter();
             
             showSuccessMessage('Journal entry added successfully!');
             journalForm.reset();
@@ -433,48 +362,65 @@ function initFormValidation() {
     }
 }
 
+function updateWordCount(text) {
+    let wordCountEl = document.getElementById('word-count');
+    if (!wordCountEl) {
+        wordCountEl = document.createElement('div');
+        wordCountEl.id = 'word-count';
+        wordCountEl.className = 'word-count';
+        const entryInput = document.getElementById('journal-entry');
+        if (entryInput) {
+            entryInput.parentNode.appendChild(wordCountEl);
+        }
+    }
+    
+    const charCount = text.length;
+    wordCountEl.textContent = `Character count: ${charCount}/50`;
+    wordCountEl.className = `word-count ${charCount >= 50 ? 'valid' : 'invalid'}`;
+}
+
 // Enhanced journal entry creation with edit functionality
-function createJournalEntry(title, content, date, isNewEntry = false) {
-    const entryId = isNewEntry ? 'entry-' + Date.now() : '';
+function createLocalJournalEntry(title, content, date, entryId = null) {
+    const id = entryId || 'local-' + Date.now();
     
     return `
-        <article class="journal-entry collapsible" data-entry-id="${entryId}" data-is-new="${isNewEntry}">
+        <article class="journal-entry collapsible" data-entry-id="${id}" data-is-new="true">
             <div class="collapsible-header">
                 <h2>${title}</h2>
                 <div class="header-spacer"></div>
                 <div class="entry-actions">
                     <span class="toggle-icon">▼</span>
-                    ${isNewEntry ? '<button class="edit-btn" type="button">✏️ Edit</button>' : ''}
+                    <button class="edit-btn" type="button">✏️ Edit</button>
                     <button class="copy-btn" type="button">📋 Copy</button>
                 </div>
             </div>
             <div class="collapsible-content">
-                <div class="entry-meta">Posted on: ${date}</div>
+                <div class="entry-meta">${date} • Local Storage</div>
                 <div class="entry-content">
                     ${content.replace(/\n/g, '<br>')}
                 </div>
-                ${isNewEntry ? `
                 <div style="margin-top: 1.5rem; text-align: center;">
-                    <button class="delete-btn" type="button">
+                    <button class="delete-btn" type="button" data-entry-id="${id}">
                         🗑️ Delete Entry
                     </button>
                 </div>
-                ` : ''}
             </div>
         </article>
     `;
 }
 
-// ===== COLLAPSIBLE SECTIONS =====
+// ===== COLLAPSIBLE SECTIONS - FIXED =====
 function initCollapsibleSections() {
+    console.log('Initializing collapsible sections...');
+    
     const collapsibleHeaders = document.querySelectorAll('.collapsible-header');
     
     collapsibleHeaders.forEach((header, index) => {
-        // Remove any existing event listeners by cloning
+        // Remove any existing event listeners by cloning and replacing
         const newHeader = header.cloneNode(true);
         header.parentNode.replaceChild(newHeader, header);
         
-        // Get the new header and its content
+        // Get the fresh header and its content
         const freshHeader = document.querySelectorAll('.collapsible-header')[index];
         const content = freshHeader.nextElementSibling;
         
@@ -485,20 +431,33 @@ function initCollapsibleSections() {
             
             // Add click event to header
             freshHeader.addEventListener('click', function(e) {
-                // Don't trigger if click was on copy button or edit button
-                if (e.target.closest('.copy-btn') || e.target.closest('.edit-btn') || e.target.closest('.delete-btn')) return;
+                // Don't trigger if click was on buttons
+                if (e.target.closest('.copy-btn') || 
+                    e.target.closest('.edit-btn') || 
+                    e.target.closest('.delete-btn')) {
+                    return;
+                }
+                
+                console.log('Collapsible header clicked');
                 
                 // Toggle the content visibility
-                if (content.style.display === 'block' || content.style.display === '') {
+                const isVisible = content.style.display === 'block';
+                
+                if (isVisible) {
                     content.style.display = 'none';
                     this.classList.remove('active');
                 } else {
                     content.style.display = 'block';
                     this.classList.add('active');
                 }
+                
+                // Force reflow to ensure animation works
+                content.offsetHeight;
             });
         }
     });
+    
+    console.log(`Initialized ${collapsibleHeaders.length} collapsible sections`);
 }
 
 // ===== REUSABLE NAVIGATION =====
@@ -578,8 +537,6 @@ function showSuccessMessage(message) {
     }, 3000);
 }
 
-
-
 // ===== ENHANCED INITIALIZATION =====
 document.addEventListener('DOMContentLoaded', function() {
     console.log('DOM loaded - initializing enhanced features');
@@ -598,8 +555,14 @@ document.addEventListener('DOMContentLoaded', function() {
     setTimeout(() => {
         console.log('Loading saved entries and initializing components...');
         
-        // Load saved entries first
-        loadSavedEntries();
+        // Load saved local entries first
+        const localEntries = loadJournalEntries();
+        if (localEntries && localEntries.length > 0) {
+            displayLocalEntries(localEntries);
+        }
+        
+        // Then load JSON entries
+        initJSONFeatures();
         
         // Then ensure proper structure
         ensureHeaderStructure();
@@ -610,19 +573,12 @@ document.addEventListener('DOMContentLoaded', function() {
         initEditFunctionality();
         initDeleteFunctionality();
         
-        // NEW: Initialize JSON features after everything else is set up
-        initJSONFeatures();
-        
         console.log('All enhanced features initialized successfully!');
-        
-        // Debug: Log all copy buttons found
-        const copyButtons = document.querySelectorAll('.copy-btn');
-        console.log(`Found ${copyButtons.length} copy buttons in the document`);
         
     }, 100);
 });
 
-// ===== NEW JSON FEATURES INITIALIZATION =====
+// ===== JSON FEATURES INITIALIZATION =====
 async function initJSONFeatures() {
     console.log('Initializing JSON features...');
     
@@ -634,71 +590,10 @@ async function initJSONFeatures() {
         // Update counter
         updateReflectionCounter();
         
-        // Re-initialize collapsible sections for new entries
-        initCollapsibleSections();
-        initClipboardAPI();
-        
-        console.log('JSON features initialized successfully!');
-        
     } catch (error) {
         console.error('Error initializing JSON features:', error);
     }
 }
-
-// ===== GLOBAL FUNCTIONS FOR JSON INTERACTION =====
-// Make these functions available globally for HTML onclick attributes
-window.refreshJSONData = async function() {
-    try {
-        const jsonReflections = await fetchJSONReflections();
-        
-        // Remove existing JSON entries
-        document.querySelectorAll('.journal-entry[data-source="json"]').forEach(entry => {
-            entry.remove();
-        });
-        
-        // Display updated JSON reflections
-        displayJSONReflections(jsonReflections);
-        updateReflectionCounter();
-        
-        // Re-initialize features
-        initCollapsibleSections();
-        initClipboardAPI();
-        
-        showSuccessMessage('JSON data refreshed successfully!');
-    } catch (error) {
-        console.error('Error refreshing JSON data:', error);
-        alert('Error refreshing JSON data. Please check the console for details.');
-    }
-};
-
-window.showBackendInfo = function() {
-    const infoDiv = document.getElementById('backend-info');
-    const totalEntries = document.querySelectorAll('.journal-entry').length;
-    const jsonEntries = document.querySelectorAll('.journal-entry[data-source="json"]').length;
-    const localEntries = document.querySelectorAll('.journal-entry[data-is-new="true"]').length;
-    const staticEntries = totalEntries - jsonEntries - localEntries;
-    
-    infoDiv.style.display = 'block';
-    infoDiv.innerHTML = `
-        <h4>📊 Backend Information</h4>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin: 1rem 0;">
-            <div><strong>Total Entries:</strong></div>
-            <div>${totalEntries}</div>
-            <div><strong>JSON Entries:</strong></div>
-            <div>${jsonEntries}</div>
-            <div><strong>Local Entries:</strong></div>
-            <div>${localEntries}</div>
-            <div><strong>Static Entries:</strong></div>
-            <div>${staticEntries}</div>
-        </div>
-        <p><strong>JSON File:</strong> <code>backend/reflections.json</code></p>
-        <p><strong>Python Script:</strong> <code>backend/save_entry.py</code></p>
-        <p><strong>Usage:</strong> Run the Python script in terminal to add new reflections</p>
-        <button onclick="this.parentElement.style.display='none'" class="btn-primary" style="margin-top: 1rem;">
-            Close
-        </button>
-    `;
-};
 
 // Add keyframes for animations
 const style = document.createElement('style');
@@ -776,123 +671,22 @@ style.textContent = `
         box-shadow: 0 3px 10px rgba(149, 165, 166, 0.3) !important;
     }
     
-    /* JSON Entry Styles */
-    .journal-entry[data-source="json"] {
-        border-left: 4px solid #27ae60;
+    .word-count {
+        font-size: 0.8rem;
+        font-style: italic;
+        margin-top: 0.25rem;
     }
     
-    .journal-entry[data-source="json"] .collapsible-header {
-        background: linear-gradient(135deg, #f8f9fa 0%, #e8f5e8 100%);
+    .word-count.valid {
+        color: #27ae60;
     }
     
-    .dark-theme .journal-entry[data-source="json"] {
-        border-left-color: #2ecc71;
-    }
-    
-    .dark-theme .journal-entry[data-source="json"] .collapsible-header {
-        background: linear-gradient(135deg, #2d2d2d 0%, #1e2f1e 100%);
-    }
-    
-    /* Reflection Counter Styles */
-    .reflection-counter {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        padding: 1.5rem;
-        border-radius: 12px;
-        margin: 2rem 0;
-        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
-    }
-    
-    .reflection-counter h3 {
-        margin: 0 0 1rem 0;
-        text-align: center;
-        font-size: 1.3rem;
-    }
-    
-    .counter-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-        gap: 1rem;
-    }
-    
-    .counter-item {
-        text-align: center;
-        padding: 1rem;
-        background: rgba(255, 255, 255, 0.2);
-        border-radius: 8px;
-        backdrop-filter: blur(10px);
-    }
-    
-    .counter-number {
-        display: block;
-        font-size: 2rem;
-        font-weight: bold;
-        margin-bottom: 0.5rem;
-    }
-    
-    .counter-label {
-        font-size: 0.9rem;
-        opacity: 0.9;
-    }
-    
-    .dark-theme .reflection-counter {
-        background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
-    }
-    
-    /* Python Backend Section Styles */
-    .python-backend-section {
-        background: var(--card-bg);
-        padding: 2rem;
-        border-radius: 12px;
-        margin: 2rem 0;
-        border: 2px solid #e9ecef;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-    }
-    
-    .python-backend-section h3 {
-        color: #2c3e50;
-        margin-bottom: 1rem;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-    
-    .backend-actions {
-        display: flex;
-        gap: 1rem;
-        margin-top: 1.5rem;
-        flex-wrap: wrap;
-    }
-    
-    .backend-steps {
-        margin: 1.5rem 0;
-    }
-    
-    .backend-step {
-        margin-bottom: 1rem;
-        padding-left: 1.5rem;
-        position: relative;
-    }
-    
-    .backend-step:before {
-        content: '▸';
-        position: absolute;
-        left: 0;
-        color: #667eea;
-        font-weight: bold;
-    }
-    
-    .dark-theme .python-backend-section {
-        border-color: #404040;
-    }
-    
-    .json-error {
+    .word-count.invalid {
         color: #e74c3c;
-        background: rgba(231, 76, 60, 0.1);
-        padding: 1rem;
-        border-radius: 8px;
-        margin-top: 1rem;
-        border-left: 4px solid #e74c3c;
     }
 `;
 document.head.appendChild(style);
+
+// Make functions globally available
+window.confirmDeleteEntry = confirmDeleteEntry;
+window.closeDeleteConfirmation = closeDeleteConfirmation;
