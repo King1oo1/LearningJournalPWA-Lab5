@@ -1,51 +1,11 @@
-// js/storage.js - Storage API Functions
+// js/storage.js - Storage API Functions for Lab 5: Python JSON Backend
 
-// ===== STORAGE API ENHANCEMENTS =====
-function saveJournalEntries() {
-    const entries = [];
-    document.querySelectorAll('.journal-entry').forEach(entry => {
-        const contentElement = entry.querySelector('.collapsible-content');
-        if (contentElement) {
-            const isNew = entry.getAttribute('data-is-new') === 'true';
-            const isJSON = entry.getAttribute('data-source') === 'json';
-            
-            // Only save local entries, not JSON entries or static weeks
-            if (isNew && !isJSON) {
-                entries.push({
-                    title: entry.querySelector('h2').textContent,
-                    content: contentElement.innerHTML,
-                    date: entry.querySelector('.entry-meta')?.textContent || new Date().toLocaleDateString(),
-                    isNew: isNew,
-                    id: entry.getAttribute('data-entry-id')
-                });
-            }
-        }
-    });
-    localStorage.setItem('journalEntries', JSON.stringify(entries));
-    console.log('Saved local entries:', entries.length);
-}
-
-function loadJournalEntries() {
-    const savedEntries = localStorage.getItem('journalEntries');
-    if (savedEntries) {
-        try {
-            const entries = JSON.parse(savedEntries);
-            console.log('Loaded local entries:', entries.length);
-            return entries;
-        } catch (error) {
-            console.error('Error parsing saved entries:', error);
-            return [];
-        }
-    }
-    return [];
-}
-
-// Enhanced theme storage with session storage fallback
+// ===== THEME STORAGE ONLY (No journal entry storage) =====
 function initThemeSwitcher() {
     const themeToggle = document.getElementById('theme-toggle');
     const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
     
-    // Check multiple storage options
+    // Check theme preference
     const currentTheme = localStorage.getItem('theme') || 
                         sessionStorage.getItem('theme') ||
                         (prefersDarkScheme.matches ? 'dark' : 'light');
@@ -67,7 +27,7 @@ function initThemeSwitcher() {
                 this.textContent = '🌙 Dark Mode';
             }
             
-            // Save to both local and session storage
+            // Save theme preference only
             localStorage.setItem('theme', theme);
             sessionStorage.setItem('theme', theme);
         });
@@ -78,19 +38,15 @@ function initThemeSwitcher() {
 function showStorageInfo() {
     const infoDiv = document.getElementById('storage-info');
     const theme = localStorage.getItem('theme') || 'light';
-    const entries = localStorage.getItem('journalEntries');
-    const entryCount = entries ? JSON.parse(entries).length : 0;
     
-    infoDiv.innerHTML = `
-        <p><strong>Current Theme:</strong> ${theme}</p>
-        <p><strong>Saved Local Entries:</strong> ${entryCount}</p>
-        <p><strong>Storage Used:</strong> ${calculateStorageUsage()} KB</p>
-        <p><strong>JSON Entries:</strong> <span id="json-entry-count">Loading...</span></p>
-    `;
-    
-    // Update JSON entry count
+    // Fetch JSON data to show current entries
     fetchJSONReflections().then(reflections => {
-        document.getElementById('json-entry-count').textContent = reflections.length;
+        infoDiv.innerHTML = `
+            <p><strong>Current Theme:</strong> ${theme}</p>
+            <p><strong>JSON Entries:</strong> ${reflections.length} entries in reflections.json</p>
+            <p><strong>Storage Used:</strong> ${calculateStorageUsage()} KB (theme only)</p>
+            <p><strong>Data Source:</strong> Python JSON Backend</p>
+        `;
     });
 }
 
@@ -104,21 +60,7 @@ function calculateStorageUsage() {
     return (total / 1024).toFixed(2);
 }
 
-// ===== LOAD SAVED ENTRIES =====
-function loadSavedEntries() {
-    const savedEntries = loadJournalEntries();
-    if (savedEntries && savedEntries.length > 0) {
-        const journalFormSection = document.querySelector('.journal-form-section');
-        if (journalFormSection) {
-            savedEntries.forEach(entry => {
-                const entryHTML = createJournalEntry(entry.title, entry.content, entry.date, true);
-                journalFormSection.insertAdjacentHTML('afterend', entryHTML);
-            });
-        }
-    }
-}
-
-// ===== JSON FILE STORAGE FUNCTIONS =====
+// ===== PYTHON JSON BACKEND INTEGRATION =====
 async function fetchJSONReflections() {
     try {
         const response = await fetch('backend/reflections.json');
@@ -139,30 +81,27 @@ function displayJSONReflections(reflections) {
     const container = document.getElementById('journal-entries-container');
     if (!container) return;
 
-    // Filter out entries that are already in the hardcoded ones
-    const existingTitles = new Set();
-    document.querySelectorAll('.journal-entry:not([data-source="json"]) h2').forEach(title => {
-        existingTitles.add(title.textContent.trim());
+    // Clear existing JSON entries (keep static weeks)
+    document.querySelectorAll('.journal-entry[data-source="json"]').forEach(entry => {
+        entry.remove();
     });
 
-    const newReflections = reflections.filter(reflection => {
-        const potentialTitle = `Python Entry: ${reflection.date} - ${reflection.name}`;
-        return !existingTitles.has(potentialTitle);
-    });
-
-    if (newReflections.length === 0) {
-        console.log('No new JSON reflections to display');
+    if (reflections.length === 0) {
+        console.log('No JSON reflections to display');
         return;
     }
 
-    console.log('Displaying new JSON reflections:', newReflections.length);
+    console.log('Displaying JSON reflections:', reflections.length);
 
-    // Create entries for JSON reflections (insert after local entries but before static weeks)
-    newReflections.forEach(reflection => {
+    // Reverse the array to show NEWEST entries FIRST (at the top)
+    const reversedReflections = [...reflections].reverse();
+
+    // Create entries for JSON reflections (insert at the VERY TOP, before Week 5)
+    reversedReflections.forEach((reflection, index) => {
         const entryHTML = `
             <article class="journal-entry collapsible" data-source="json">
                 <div class="collapsible-header">
-                    <h2>Python Entry: ${reflection.date} - ${reflection.name}</h2>
+                    <h2>${reflection.name} - ${reflection.date}</h2>
                     <div class="header-spacer"></div>
                     <div class="entry-actions">
                         <span class="toggle-icon">▼</span>
@@ -175,28 +114,22 @@ function displayJSONReflections(reflections) {
                         ${reflection.reflection.replace(/\n/g, '<br>')}
                     </div>
                     <div style="margin-top: 1rem; padding: 0.5rem; background: rgba(52, 152, 219, 0.1); border-radius: 4px;">
-                        <small>💡 This entry was added using the Python script and stored in reflections.json</small>
+                        <small>💡 This entry was created using Python and stored in reflections.json</small>
                     </div>
                 </div>
             </article>
         `;
         
-        // Insert after the form section (before any existing entries)
-        const journalFormSection = document.querySelector('.journal-form-section');
-        if (journalFormSection) {
-            journalFormSection.insertAdjacentHTML('afterend', entryHTML);
-        } else {
-            container.insertAdjacentHTML('afterbegin', entryHTML);
-        }
+        // Insert at the VERY beginning of the container (before Week 5)
+        container.insertAdjacentHTML('afterbegin', entryHTML);
     });
 }
 
-// ===== ENHANCED REFLECTION COUNTER =====
+// ===== REFLECTION COUNTER =====
 function updateReflectionCounter() {
     const totalEntries = document.querySelectorAll('.journal-entry').length;
     const jsonEntries = document.querySelectorAll('.journal-entry[data-source="json"]').length;
-    const localEntries = document.querySelectorAll('.journal-entry[data-is-new="true"]').length;
-    const staticEntries = totalEntries - jsonEntries - localEntries;
+    const staticEntries = totalEntries - jsonEntries;
     
     const counterHTML = `
         <div class="reflection-counter">
@@ -211,16 +144,16 @@ function updateReflectionCounter() {
                     <span class="counter-label">Course Weeks</span>
                 </div>
                 <div class="counter-item">
-                    <span class="counter-number">${localEntries}</span>
-                    <span class="counter-label">Local Entries</span>
+                    <span class="counter-number">${jsonEntries}</span>
+                    <span class="counter-label">Python JSON Entries</span>
                 </div>
                 <div class="counter-item">
                     <span class="counter-number">${jsonEntries}</span>
-                    <span class="counter-label">JSON Entries</span>
+                    <span class="counter-label">Backend Storage</span>
                 </div>
             </div>
             <div style="text-align: center; margin-top: 1rem; font-size: 0.9rem; opacity: 0.8;">
-                💡 JSON entries are managed by Python backend
+                💡 All new entries are created using Python and stored in JSON
             </div>
         </div>
     `;
@@ -235,26 +168,25 @@ function updateReflectionCounter() {
 // ===== BACKEND INTERACTION FUNCTIONS =====
 async function refreshJSONData() {
     try {
-        console.log('Refreshing JSON data...');
+        console.log('Refreshing JSON data from Python backend...');
         const jsonReflections = await fetchJSONReflections();
         
-        // Remove existing JSON entries
+        // Remove existing JSON entries and re-display
         document.querySelectorAll('.journal-entry[data-source="json"]').forEach(entry => {
             entry.remove();
         });
         
-        // Display updated JSON reflections
         displayJSONReflections(jsonReflections);
         updateReflectionCounter();
         
-        // Re-initialize features
+        // Re-initialize features for new entries
         if (window.initCollapsibleSections) initCollapsibleSections();
         if (window.initClipboardAPI) initClipboardAPI();
         
-        showSuccessMessage(`JSON data refreshed! Loaded ${jsonReflections.length} entries from backend.`);
+        showSuccessMessage(`✅ Loaded ${jsonReflections.length} entries from Python JSON backend`);
     } catch (error) {
         console.error('Error refreshing JSON data:', error);
-        alert('Error refreshing JSON data. Please check the console for details.');
+        showErrorMessage('Error refreshing JSON data. Make sure reflections.json exists in backend folder.');
     }
 }
 
@@ -262,11 +194,11 @@ function showBackendInfo() {
     const infoDiv = document.getElementById('backend-info');
     const totalEntries = document.querySelectorAll('.journal-entry').length;
     const jsonEntries = document.querySelectorAll('.journal-entry[data-source="json"]').length;
-    const localEntries = document.querySelectorAll('.journal-entry[data-is-new="true"]').length;
     
     infoDiv.style.display = 'block';
     infoDiv.innerHTML = `
-        <h4>🔧 Backend Information</h4>
+        <h4>🔧 How the Python JSON Backend Works</h4>
+        
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1rem 0;">
             <div>
                 <strong>Total Entries:</strong> ${totalEntries}
@@ -274,23 +206,30 @@ function showBackendInfo() {
             <div>
                 <strong>JSON Entries:</strong> ${jsonEntries}
             </div>
-            <div>
-                <strong>Local Entries:</strong> ${localEntries}
-            </div>
-            <div>
-                <strong>Static Entries:</strong> ${totalEntries - jsonEntries - localEntries}
-            </div>
         </div>
-        <p><strong>JSON File:</strong> <code>backend/reflections.json</code></p>
-        <p><strong>Python Script:</strong> <code>backend/save_entry.py</code></p>
-        <p><strong>Usage:</strong> Run the Python script in terminal to add new reflections</p>
+        
+        <p><strong>Data Flow:</strong></p>
+        <ol style="margin: 0.5rem 0 1rem 1rem;">
+            <li>Python script creates/updates <code>reflections.json</code></li>
+            <li>JavaScript fetches JSON data using Fetch API</li>
+            <li>Entries are displayed dynamically in the PWA</li>
+            <li>All data is version-controlled in GitHub</li>
+        </ol>
+        
+        <p><strong>Files:</strong></p>
+        <ul style="margin: 0.5rem 0 1rem 1rem;">
+            <li><code>backend/reflections.json</code> - Data storage</li>
+            <li><code>backend/save_entry.py</code> - Python interface</li>
+            <li><code>js/storage.js</code> - JavaScript data fetching</li>
+        </ul>
+        
         <div style="margin-top: 1rem; padding: 0.8rem; background: rgba(52, 152, 219, 0.1); border-radius: 4px;">
-            <strong>💡 How to use Python backend:</strong>
+            <strong>🚀 How to add entries:</strong>
             <ol style="margin: 0.5rem 0 0 1rem;">
                 <li>Open terminal in project folder</li>
                 <li>Run: <code>cd backend</code></li>
                 <li>Run: <code>python save_entry.py</code></li>
-                <li>Follow the menu to add entries</li>
+                <li>Choose option 1 to add new reflection</li>
                 <li>Click "Refresh JSON Data" above</li>
             </ol>
         </div>
@@ -315,9 +254,8 @@ function exportJSONData() {
     });
 }
 
-// ===== SUCCESS MESSAGE FUNCTION =====
+// ===== MESSAGE FUNCTIONS =====
 function showSuccessMessage(message) {
-    // Create success notification
     const successMsg = document.createElement('div');
     successMsg.style.cssText = `
         position: fixed;
@@ -340,10 +278,39 @@ function showSuccessMessage(message) {
     successMsg.innerHTML = `✅ ${message}`;
     document.body.appendChild(successMsg);
     
-    // Auto remove after animation
     setTimeout(() => {
         if (successMsg.parentNode) {
             successMsg.parentNode.removeChild(successMsg);
+        }
+    }, 3000);
+}
+
+function showErrorMessage(message) {
+    const errorMsg = document.createElement('div');
+    errorMsg.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+        color: white;
+        padding: 1rem 1.5rem;
+        border-radius: 12px;
+        box-shadow: 0 10px 30px rgba(231, 76, 60, 0.4);
+        z-index: 1001;
+        animation: slideInRight 0.5s ease, slideOutRight 0.5s ease 2.5s;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        max-width: 300px;
+    `;
+    
+    errorMsg.innerHTML = `❌ ${message}`;
+    document.body.appendChild(errorMsg);
+    
+    setTimeout(() => {
+        if (errorMsg.parentNode) {
+            errorMsg.parentNode.removeChild(errorMsg);
         }
     }, 3000);
 }
