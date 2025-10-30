@@ -1,6 +1,100 @@
-// js/storage.js - Storage API Functions for Lab 5: Python JSON Backend
+// js/storage.js - Storage API Functions for Lab 5: Python JSON Backend + Local Storage
 
-// ===== THEME STORAGE ONLY (No journal entry storage) =====
+// ===== LOCAL STORAGE FUNCTIONS (Lab 4) =====
+function saveJournalEntries() {
+    const entries = [];
+    document.querySelectorAll('.journal-entry[data-is-new="true"]').forEach(entry => {
+        const contentElement = entry.querySelector('.collapsible-content');
+        if (contentElement) {
+            entries.push({
+                title: entry.querySelector('h2').textContent,
+                content: contentElement.innerHTML,
+                date: entry.querySelector('.entry-meta')?.textContent || new Date().toLocaleDateString(),
+                isNew: true,
+                id: entry.getAttribute('data-entry-id')
+            });
+        }
+    });
+    localStorage.setItem('journalEntries', JSON.stringify(entries));
+    console.log('Saved local entries:', entries.length);
+}
+
+function loadJournalEntries() {
+    const savedEntries = localStorage.getItem('journalEntries');
+    if (savedEntries) {
+        try {
+            const entries = JSON.parse(savedEntries);
+            console.log('Loaded local entries:', entries.length);
+            return entries;
+        } catch (error) {
+            console.error('Error parsing saved entries:', error);
+            return [];
+        }
+    }
+    return [];
+}
+
+function displayLocalEntries(entries) {
+    const container = document.getElementById('journal-entries-container');
+    if (!container || entries.length === 0) return;
+
+    // Find the position to insert local entries (after JSON entries, before Week 5)
+    const jsonEntries = document.querySelectorAll('.journal-entry[data-source="json"]');
+    const week5Entry = document.querySelector('.journal-entry:not([data-source="json"]):not([data-is-new="true"])');
+    
+    let insertPosition = container;
+    
+    if (jsonEntries.length > 0) {
+        // Insert after the last JSON entry
+        insertPosition = jsonEntries[jsonEntries.length - 1];
+    } else if (week5Entry) {
+        // Insert before Week 5 if no JSON entries
+        insertPosition = week5Entry;
+    }
+
+    // Display local entries (newest first)
+    entries.reverse().forEach(entry => {
+        const entryHTML = createLocalJournalEntry(entry.title, entry.content, entry.date, entry.id);
+        
+        if (insertPosition === container) {
+            container.insertAdjacentHTML('afterbegin', entryHTML);
+        } else {
+            insertPosition.insertAdjacentHTML('afterend', entryHTML);
+            insertPosition = insertPosition.nextElementSibling;
+        }
+    });
+}
+
+function createLocalJournalEntry(title, content, date, entryId = null) {
+    const id = entryId || 'local-' + Date.now();
+    
+    return `
+        <article class="journal-entry collapsible" data-entry-id="${id}" data-is-new="true">
+            <div class="collapsible-header">
+                <h2>${title}</h2>
+                <div class="header-spacer"></div>
+                <div class="entry-actions">
+                    <span class="toggle-icon">▼</span>
+                    <button class="edit-btn" type="button">✏️ Edit</button>
+                    <button class="copy-btn" type="button">📋 Copy</button>
+                </div>
+            </div>
+            <div class="collapsible-content">
+                <div class="entry-meta">${date} • Local Storage</div>
+                <div class="entry-content">
+                    ${content}
+                </div>
+                <div style="margin-top: 1.5rem; text-align: center;">
+                    <button class="delete-btn" type="button" data-entry-id="${id}">
+                        🗑️ Delete Entry
+                    </button>
+                </div>
+            </div>
+        </article>
+    `;
+}
+
+// ===== THEME STORAGE =====
 function initThemeSwitcher() {
     const themeToggle = document.getElementById('theme-toggle');
     const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
@@ -27,7 +121,7 @@ function initThemeSwitcher() {
                 this.textContent = '🌙 Dark Mode';
             }
             
-            // Save theme preference only
+            // Save theme preference
             localStorage.setItem('theme', theme);
             sessionStorage.setItem('theme', theme);
         });
@@ -38,14 +132,17 @@ function initThemeSwitcher() {
 function showStorageInfo() {
     const infoDiv = document.getElementById('storage-info');
     const theme = localStorage.getItem('theme') || 'light';
+    const localEntries = localStorage.getItem('journalEntries');
+    const localCount = localEntries ? JSON.parse(localEntries).length : 0;
     
     // Fetch JSON data to show current entries
     fetchJSONReflections().then(reflections => {
         infoDiv.innerHTML = `
             <p><strong>Current Theme:</strong> ${theme}</p>
-            <p><strong>JSON Entries:</strong> ${reflections.length} entries in reflections.json</p>
-            <p><strong>Storage Used:</strong> ${calculateStorageUsage()} KB (theme only)</p>
-            <p><strong>Data Source:</strong> Python JSON Backend</p>
+            <p><strong>Local Storage Entries:</strong> ${localCount}</p>
+            <p><strong>JSON Backend Entries:</strong> ${reflections.length}</p>
+            <p><strong>Storage Used:</strong> ${calculateStorageUsage()} KB</p>
+            <p><strong>Data Sources:</strong> Python JSON + Browser Local Storage</p>
         `;
     });
 }
@@ -60,7 +157,7 @@ function calculateStorageUsage() {
     return (total / 1024).toFixed(2);
 }
 
-// ===== PYTHON JSON BACKEND INTEGRATION =====
+// ===== PYTHON JSON BACKEND INTEGRATION (Lab 5) =====
 async function fetchJSONReflections() {
     try {
         const response = await fetch('backend/reflections.json');
@@ -72,7 +169,6 @@ async function fetchJSONReflections() {
         return reflections;
     } catch (error) {
         console.error('Error fetching JSON reflections:', error);
-        // Return empty array instead of throwing to prevent breaking the UI
         return [];
     }
 }
@@ -81,7 +177,7 @@ function displayJSONReflections(reflections) {
     const container = document.getElementById('journal-entries-container');
     if (!container) return;
 
-    // Clear existing JSON entries (keep static weeks)
+    // Clear existing JSON entries
     document.querySelectorAll('.journal-entry[data-source="json"]').forEach(entry => {
         entry.remove();
     });
@@ -96,7 +192,7 @@ function displayJSONReflections(reflections) {
     // Reverse the array to show NEWEST entries FIRST (at the top)
     const reversedReflections = [...reflections].reverse();
 
-    // Create entries for JSON reflections (insert at the VERY TOP, before Week 5)
+    // Create entries for JSON reflections (insert at the VERY TOP)
     reversedReflections.forEach((reflection, index) => {
         const entryHTML = `
             <article class="journal-entry collapsible" data-source="json">
@@ -120,7 +216,7 @@ function displayJSONReflections(reflections) {
             </article>
         `;
         
-        // Insert at the VERY beginning of the container (before Week 5)
+        // Insert at the VERY beginning of the container
         container.insertAdjacentHTML('afterbegin', entryHTML);
     });
 }
@@ -129,11 +225,12 @@ function displayJSONReflections(reflections) {
 function updateReflectionCounter() {
     const totalEntries = document.querySelectorAll('.journal-entry').length;
     const jsonEntries = document.querySelectorAll('.journal-entry[data-source="json"]').length;
-    const staticEntries = totalEntries - jsonEntries;
+    const localEntries = document.querySelectorAll('.journal-entry[data-is-new="true"]').length;
+    const staticEntries = totalEntries - jsonEntries - localEntries;
     
     const counterHTML = `
         <div class="reflection-counter">
-            <h3>📊 Reflection Statistics - Lab 5</h3>
+            <h3>📊 Reflection Statistics - Hybrid Storage</h3>
             <div class="counter-grid">
                 <div class="counter-item">
                     <span class="counter-number">${totalEntries}</span>
@@ -144,16 +241,16 @@ function updateReflectionCounter() {
                     <span class="counter-label">Course Weeks</span>
                 </div>
                 <div class="counter-item">
-                    <span class="counter-number">${jsonEntries}</span>
-                    <span class="counter-label">Python JSON Entries</span>
+                    <span class="counter-number">${localEntries}</span>
+                    <span class="counter-label">Local Storage</span>
                 </div>
                 <div class="counter-item">
                     <span class="counter-number">${jsonEntries}</span>
-                    <span class="counter-label">Backend Storage</span>
+                    <span class="counter-label">JSON Backend</span>
                 </div>
             </div>
             <div style="text-align: center; margin-top: 1rem; font-size: 0.9rem; opacity: 0.8;">
-                💡 All new entries are created using Python and stored in JSON
+                💡 Hybrid storage: Python JSON backend + Browser local storage
             </div>
         </div>
     `;
@@ -194,10 +291,11 @@ function showBackendInfo() {
     const infoDiv = document.getElementById('backend-info');
     const totalEntries = document.querySelectorAll('.journal-entry').length;
     const jsonEntries = document.querySelectorAll('.journal-entry[data-source="json"]').length;
+    const localEntries = document.querySelectorAll('.journal-entry[data-is-new="true"]').length;
     
     infoDiv.style.display = 'block';
     infoDiv.innerHTML = `
-        <h4>🔧 How the Python JSON Backend Works</h4>
+        <h4>🔧 Hybrid Storage System</h4>
         
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1rem 0;">
             <div>
@@ -206,33 +304,29 @@ function showBackendInfo() {
             <div>
                 <strong>JSON Entries:</strong> ${jsonEntries}
             </div>
+            <div>
+                <strong>Local Entries:</strong> ${localEntries}
+            </div>
+            <div>
+                <strong>Static Entries:</strong> ${totalEntries - jsonEntries - localEntries}
+            </div>
         </div>
         
-        <p><strong>Data Flow:</strong></p>
-        <ol style="margin: 0.5rem 0 1rem 1rem;">
-            <li>Python script creates/updates <code>reflections.json</code></li>
-            <li>JavaScript fetches JSON data using Fetch API</li>
-            <li>Entries are displayed dynamically in the PWA</li>
-            <li>All data is version-controlled in GitHub</li>
-        </ol>
-        
-        <p><strong>Files:</strong></p>
+        <p><strong>Python JSON Backend:</strong></p>
         <ul style="margin: 0.5rem 0 1rem 1rem;">
-            <li><code>backend/reflections.json</code> - Data storage</li>
-            <li><code>backend/save_entry.py</code> - Python interface</li>
-            <li><code>js/storage.js</code> - JavaScript data fetching</li>
+            <li>Run <code>python backend/save_entry.py</code> to add entries</li>
+            <li>Entries stored in <code>backend/reflections.json</code></li>
+            <li>Version controlled in GitHub</li>
+            <li>Cross-platform persistence</li>
         </ul>
         
-        <div style="margin-top: 1rem; padding: 0.8rem; background: rgba(52, 152, 219, 0.1); border-radius: 4px;">
-            <strong>🚀 How to add entries:</strong>
-            <ol style="margin: 0.5rem 0 0 1rem;">
-                <li>Open terminal in project folder</li>
-                <li>Run: <code>cd backend</code></li>
-                <li>Run: <code>python save_entry.py</code></li>
-                <li>Choose option 1 to add new reflection</li>
-                <li>Click "Refresh JSON Data" above</li>
-            </ol>
-        </div>
+        <p><strong>Browser Local Storage:</strong></p>
+        <ul style="margin: 0.5rem 0 1rem 1rem;">
+            <li>Use the form above to add entries</li>
+            <li>Edit/Delete functionality available</li>
+            <li>Browser-specific storage</li>
+            <li>Immediate updates</li>
+        </ul>
     `;
 }
 
@@ -320,3 +414,4 @@ window.refreshJSONData = refreshJSONData;
 window.showBackendInfo = showBackendInfo;
 window.exportJSONData = exportJSONData;
 window.showStorageInfo = showStorageInfo;
+window.saveJournalEntries = saveJournalEntries;

@@ -89,6 +89,82 @@ function ensureCopyButton(header, entry) {
     }
 }
 
+
+// ===== FORM VALIDATION AND SUBMISSION =====
+function initFormValidation() {
+    const journalForm = document.getElementById('journal-form');
+    
+    if (journalForm) {
+        journalForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const titleInput = document.getElementById('journal-title');
+            const entryInput = document.getElementById('journal-entry');
+            const title = titleInput.value.trim();
+            const content = entryInput.value.trim();
+            
+            // Validation
+            if (!title) {
+                alert('Please enter a title for your journal entry.');
+                titleInput.focus();
+                return false;
+            }
+            
+            if (content.length < 50) {
+                alert(`Please write at least 50 characters. You currently have ${content.length} characters.`);
+                entryInput.focus();
+                return false;
+            }
+            
+            // Create and save new entry
+            const now = new Date();
+            const dateString = now.toLocaleDateString('en-US', { 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            });
+            
+            const newEntryHTML = createLocalJournalEntry(title, content, dateString);
+            const journalFormSection = document.querySelector('.journal-form-section');
+            if (journalFormSection) {
+                journalFormSection.insertAdjacentHTML('afterend', newEntryHTML);
+            }
+            
+            // Re-initialize features for new entry
+            ensureHeaderStructure();
+            initCollapsibleSections();
+            initEditFunctionality();
+            initDeleteFunctionality();
+            initClipboardAPI();
+            saveJournalEntries();
+            updateReflectionCounter();
+            
+            showSuccessMessage('Journal entry added successfully!');
+            journalForm.reset();
+            updateWordCount('');
+            
+            return true;
+        });
+    }
+}
+
+function updateWordCount(text) {
+    let wordCountEl = document.getElementById('word-count');
+    if (!wordCountEl) {
+        wordCountEl = document.createElement('div');
+        wordCountEl.id = 'word-count';
+        wordCountEl.className = 'word-count';
+        const entryInput = document.getElementById('journal-entry');
+        if (entryInput) {
+            entryInput.parentNode.appendChild(wordCountEl);
+        }
+    }
+    
+    const charCount = text.length;
+    wordCountEl.textContent = `Character count: ${charCount}`;
+    wordCountEl.className = `word-count ${charCount >= 50 ? 'valid' : 'invalid'}`;
+}
+
 // ===== EDIT JOURNAL ENTRIES FUNCTIONALITY =====
 function initEditFunctionality() {
     // Use event delegation for edit buttons

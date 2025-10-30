@@ -49,10 +49,33 @@
 
         <!-- Reflection Counter (Added by JavaScript) -->
         <div id="reflection-counter-container"></div>
+
+        <!-- Local Journal Entry Form (Lab 4 functionality) -->
+        <section class="journal-form-section">
+            <h2>Add New Journal Entry (Local Storage)</h2>
+            <p class="form-description">Fill out the form below to add a new journal entry to local storage. You can edit or delete these entries later.</p>
+            <form id="journal-form">
+                <div class="form-group">
+                    <label for="journal-title">Title:</label>
+                    <input type="text" id="journal-title" name="title" placeholder="e.g., Week 5 Reflection" required>
+                </div>
+                <div class="form-group">
+                    <label for="journal-entry">Entry Content:</label>
+                    <textarea id="journal-entry" name="entry" rows="6" 
+                              placeholder="Write your journal entry here (minimum 10 words)..." 
+                              minlength="50" required></textarea>
+                    <small>Minimum 50 characters required. Your entry will be saved in browser storage.</small>
+                    <div id="word-count" class="word-count" style="margin-top: 0.5rem;"></div>
+                </div>
+                <button type="submit" class="btn-primary">Add Journal Entry</button>
+            </form>
+        </section>
         
-        <!-- Journal Entries Container - JSON entries will be inserted here FIRST (newest on top) -->
+        <!-- Journal Entries Container - NEWEST FIRST -->
         <div id="journal-entries-container">
             <!-- JSON entries from Python backend will be loaded here AT THE TOP -->
+            
+            <!-- Local storage entries will be loaded here -->
             
             <!-- Week 5: Python & JSON Backend Data (NEWEST STATIC ENTRY) -->
             <article class="journal-entry collapsible">
@@ -300,7 +323,7 @@ with open('reflections.json', 'w') as f:
             
             <div class="storage-demo">
                 <h4>💾 Storage API Demo</h4>
-                <p>This PWA now uses Python JSON backend for data storage. Theme preferences are still saved using browser storage.</p>
+                <p>This PWA uses both Python JSON backend and browser local storage. Theme preferences are saved using browser storage.</p>
                 <button onclick="showStorageInfo()" class="btn-primary">Show Storage Information</button>
                 <div id="storage-info" style="margin-top: 1rem; padding: 1rem; background: rgba(255,255,255,0.1); border-radius: 8px;"></div>
             </div>
