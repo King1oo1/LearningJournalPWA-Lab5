@@ -383,3 +383,4 @@ window.exportJSONData = exportJSONData;
 window.showStorageInfo = showStorageInfo;
 window.saveJournalEntries = saveJournalEntries;
 window.updateReflectionCounter = updateReflectionCounter;
+

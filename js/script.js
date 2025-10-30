@@ -2,25 +2,19 @@
 
 // ===== HEADER STRUCTURE MANAGEMENT =====
 function ensureHeaderStructure() {
+    console.log('Ensuring header structure for all entries...');
+    
     document.querySelectorAll('.journal-entry').forEach((entry, index) => {
         const header = entry.querySelector('.collapsible-header');
         if (!header) return;
         
         // Check if header already has proper structure
+        const existingTitle = header.querySelector('h2');
         const existingSpacer = header.querySelector('.header-spacer');
         const existingActions = header.querySelector('.entry-actions');
         
-        if (existingSpacer && existingActions) {
-            // Structure exists, just ensure copy button is there
-            ensureCopyButton(header, entry);
-            return;
-        }
-        
-        // Get the title text from existing content
-        let titleText = header.textContent
-            .replace(/[▼📋✏️🗑️]/g, '') // Remove all icons
-            .replace(/Copy|Edit|Delete/g, '') // Remove button text
-            .trim();
+        // Get title text
+        let titleText = existingTitle ? existingTitle.textContent : header.textContent.trim();
         
         // Clear header and rebuild with proper structure
         header.innerHTML = '';
@@ -56,7 +50,7 @@ function ensureHeaderStructure() {
             entryActions.appendChild(editBtn);
         }
         
-        // Add copy button for all entries
+        // Add copy button for ALL entries (including static weeks)
         const copyBtn = document.createElement('button');
         copyBtn.className = 'copy-btn';
         copyBtn.innerHTML = '📋 Copy';
@@ -64,33 +58,15 @@ function ensureHeaderStructure() {
         entryActions.appendChild(copyBtn);
         
         header.appendChild(entryActions);
-    });
-}
-
-// Ensure copy button exists in header
-function ensureCopyButton(header, entry) {
-    const entryActions = header.querySelector('.entry-actions');
-    if (!entryActions) return;
-    
-    // Check if copy button already exists
-    if (!entryActions.querySelector('.copy-btn')) {
-        const copyBtn = document.createElement('button');
-        copyBtn.className = 'copy-btn';
-        copyBtn.innerHTML = '📋 Copy';
-        copyBtn.setAttribute('type', 'button');
         
-        // Insert before toggle icon if it exists
-        const toggleIcon = entryActions.querySelector('.toggle-icon');
-        if (toggleIcon) {
-            entryActions.insertBefore(copyBtn, toggleIcon);
-        } else {
-            entryActions.appendChild(copyBtn);
-        }
-    }
+        console.log(`Header structure ensured for: ${titleText}`);
+    });
 }
 
 // ===== EDIT JOURNAL ENTRIES FUNCTIONALITY =====
 function initEditFunctionality() {
+    console.log('Initializing edit functionality...');
+    
     // Use event delegation for edit buttons
     document.addEventListener('click', function(e) {
         if (e.target.classList.contains('edit-btn') || e.target.closest('.edit-btn')) {
@@ -199,17 +175,23 @@ function toggleEditMode(entry) {
     }
 }
 
-// ===== ENHANCED DELETE FUNCTIONALITY =====
+// ===== ENHANCED DELETE FUNCTIONALITY - FIXED =====
 function initDeleteFunctionality() {
+    console.log('Initializing delete functionality...');
+    
     // Use event delegation for delete buttons
     document.addEventListener('click', function(e) {
-        if (e.target.classList.contains('delete-btn') || e.target.closest('.delete-btn')) {
-            const deleteBtn = e.target.classList.contains('delete-btn') ? e.target : e.target.closest('.delete-btn');
+        // Check if click is on delete button or its children
+        const deleteBtn = e.target.closest('.delete-btn');
+        if (deleteBtn) {
             const entry = deleteBtn.closest('.journal-entry');
             
             if (entry && entry.getAttribute('data-is-new') === 'true') {
+                e.preventDefault();
                 e.stopPropagation();
-                const entryId = entry.getAttribute('data-entry-id');
+                
+                const entryId = deleteBtn.getAttribute('data-entry-id') || entry.getAttribute('data-entry-id');
+                console.log('Delete button clicked for entry:', entryId);
                 showDeleteConfirmation(entryId);
             }
         }
@@ -217,6 +199,8 @@ function initDeleteFunctionality() {
 }
 
 function showDeleteConfirmation(entryId) {
+    console.log('Showing delete confirmation for:', entryId);
+    
     // Create confirmation dialog
     const confirmationHTML = `
         <div class="delete-confirmation">
@@ -263,36 +247,43 @@ function closeDeleteConfirmation() {
 }
 
 function confirmDeleteEntry(entryId) {
+    console.log('Confirming deletion for:', entryId);
+    
     const entry = document.querySelector(`[data-entry-id="${entryId}"]`);
     const deleteBtn = entry ? entry.querySelector('.delete-btn') : null;
     
-    if (deleteBtn) {
+    if (entry) {
         // Show processing state
-        deleteBtn.classList.add('processing');
-        deleteBtn.innerHTML = '⏳ Deleting...';
+        if (deleteBtn) {
+            deleteBtn.classList.add('processing');
+            deleteBtn.innerHTML = '⏳ Deleting...';
+        }
         
         setTimeout(() => {
-            if (entry) {
-                // Add fade out animation
-                entry.style.transition = 'all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
-                entry.style.opacity = '0';
-                entry.style.transform = 'translateX(-100px)';
-                entry.style.maxHeight = '0';
-                entry.style.overflow = 'hidden';
+            // Add fade out animation
+            entry.style.transition = 'all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+            entry.style.opacity = '0';
+            entry.style.transform = 'translateX(-100px)';
+            entry.style.maxHeight = '0';
+            entry.style.overflow = 'hidden';
+            entry.style.marginBottom = '0';
+            
+            setTimeout(() => {
+                entry.remove();
+                saveJournalEntries();
+                updateReflectionCounter();
                 
-                setTimeout(() => {
-                    entry.remove();
-                    saveJournalEntries();
-                    updateReflectionCounter();
-                    
-                    // Show success message
-                    showSuccessMessage('Journal entry deleted successfully!');
-                    
-                    // Close confirmation dialog
-                    closeDeleteConfirmation();
-                }, 500);
-            }
+                // Show success message
+                showSuccessMessage('Journal entry deleted successfully!');
+                
+                // Close confirmation dialog
+                closeDeleteConfirmation();
+            }, 500);
         }, 1000);
+    } else {
+        console.error('Entry not found for deletion:', entryId);
+        showErrorMessage('Error: Entry not found for deletion');
+        closeDeleteConfirmation();
     }
 }
 
@@ -450,9 +441,6 @@ function initCollapsibleSections() {
                     content.style.display = 'block';
                     this.classList.add('active');
                 }
-                
-                // Force reflow to ensure animation works
-                content.offsetHeight;
             });
         }
     });
@@ -564,7 +552,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Then load JSON entries
         initJSONFeatures();
         
-        // Then ensure proper structure
+        // Then ensure proper structure (THIS FIXES COPY BUTTONS)
         ensureHeaderStructure();
         
         // Initialize interactive components
