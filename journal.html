@@ -91,125 +91,17 @@
                     <h3>Lab 5 Journal Questions & Answers</h3>
                     
                     <h4>1. How is storing data in a JSON file different from using browser storage?</h4>
-                    <p><strong>JSON File Storage:</strong></p>
-                    <ul>
-                        <li>Persists across different browsers and devices when committed to version control</li>
-                        <li>Accessible to both server-side (Python) and client-side (JavaScript) applications</li>
-                        <li>Human-readable and easily editable with any text editor</li>
-                        <li>Can be version-controlled with Git for tracking changes</li>
-                        <li>Stored as a physical file in the project structure</li>
-                        <li>No storage limits beyond file system constraints</li>
-                    </ul>
-                    
-                    <p><strong>Browser Storage (LocalStorage):</strong></p>
-                    <ul>
-                        <li>Limited to specific browser and device</li>
-                        <li>Only accessible client-side via JavaScript</li>
-                        <li>Data is tied to specific domain and browser</li>
-                        <li>Typically limited to 5-10MB per domain</li>
-                        <li>Not easily shareable or portable between devices</li>
-                        <li>Automatically managed by the browser</li>
-                    </ul>
-                    
-                    <p><strong>Key Difference:</strong> JSON files provide cross-platform persistence and version control, while browser storage offers convenience but lacks portability.</p>
-                    
+                    <p>JSON files are cross-platform and version-controlled. They are saved as physical files that may be accessed by multiple apps. Browser storage is device-specific, restricted to 5-10MB, and accessible only through JavaScript within the same browser.</p>
+                  
                     <h4>2. How did you use Python to create or update your JSON file?</h4>
-                    <p>I implemented a Python script (<code>backend/save_entry.py</code>) that:</p>
-                    
-                    <p><strong>Creation:</strong></p>
-                    <ul>
-                        <li>Checks if <code>reflections.json</code> exists, creates it with empty array <code>[]</code> if not</li>
-                        <li>Uses <code>json.load()</code> to read existing entries into a Python list</li>
-                        <li>Appends new entries with structured data including name, date, and reflection text</li>
-                        <li>Uses <code>json.dump()</code> with indentation to write back the updated list</li>
-                    </ul>
-                    
-                    <p><strong>Update Process:</strong></p>
-                    <ul>
-                        <li>Collects user input via <code>input()</code> function in terminal</li>
-                        <li>Generates automatic timestamp using <code>datetime.now()</code></li>
-                        <li>Structures data as dictionary objects with consistent keys</li>
-                        <li>Appends to existing array and writes entire file back</li>
-                        <li>Includes error handling for file operations and JSON parsing</li>
-                    </ul>
-                    
-                    <p><strong>Code Structure:</strong></p>
-                    <pre><code># Load existing data
-with open('reflections.json', 'r') as f:
-    reflections = json.load(f)
-
-# Append new entry
-reflections.append(new_reflection)
-
-# Save updated data
-with open('reflections.json', 'w') as f:
-    json.dump(reflections, f, indent=2)</code></pre>
+                    <p>Created save_entry.py, which intelligently handles the JSON file by creating it if it is lacking, reading existing entries, adding new ones with automated timestamps, and safely writing everything back with proper formatting and error handling for reliability.</p>
                     
                     <h4>3. What does your PWA show locally, and what will users see on GitHub? Are they the same? Why or why not?</h4>
-                    
-                    <p><strong>Locally (Development Environment):</strong></p>
-                    <ul>
-                        <li>All JSON entries from <code>reflections.json</code> displayed dynamically</li>
-                        <li>Real-time updates when Python script adds new entries</li>
-                        <li>Interactive features like collapsible sections and copy buttons</li>
-                        <li>Theme preferences stored in browser localStorage</li>
-                        <li>YouTube API integration with custom controls</li>
-                    </ul>
-                    
-                    <p><strong>On GitHub Pages (Production):</strong></p>
-                    <ul>
-                        <li>Static JSON entries committed to repository</li>
-                        <li>No real-time updates unless repository is updated</li>
-                        <li>Same interactive features but with static data</li>
-                        <li>Theme preferences still work (client-side storage)</li>
-                        <li>YouTube API may have restrictions due to CORS</li>
-                    </ul>
-                    
-                    <p><strong>Are they the same?</strong> <em>Mostly, but not exactly.</em></p>
-                    
-                    <p><strong>Why they differ:</strong></p>
-                    <ul>
-                        <li>GitHub Pages serves static files only - no server-side processing</li>
-                        <li>JSON file is frozen at the time of last commit</li>
-                        <li>No ability to run Python scripts on GitHub Pages</li>
-                        <li>Local development allows dynamic file updates</li>
-                        <li>Version control captures snapshots, not real-time changes</li>
-                    </ul>
-                    
-                    <p><strong>Solution:</strong> To keep them synchronized, I regularly commit updated JSON files to GitHub, ensuring the production version reflects the latest entries.</p>
+                    <p>Local development displays live JSON updates when Python adds entries. GitHub Pages pauses JSON at commit time since it simply serves static files and does not do any backend processing. They remain synchronised by manual commits.</p>
                     
                     <h4>4. What extra feature did you add to your PWA using the JSON file, and why?</h4>
-                    
-                    <p><strong>Extra Feature: Real-time Reflection Statistics Dashboard</strong></p>
-                    
-                    <p><strong>What it does:</strong></p>
-                    <ul>
-                        <li>Dynamic counter showing total entries by type (JSON, Static, Local)</li>
-                        <li>Visual breakdown of data sources</li>
-                        <li>Auto-updates when JSON data is refreshed</li>
-                        <li>Color-coded indicators for different entry types</li>
-                    </ul>
-                    
-                    <p><strong>Why I added it:</strong></p>
-                    <ul>
-                        <li><strong>Demonstrate Data Integration:</strong> Shows seamless connection between Python backend and JavaScript frontend</li>
-                        <li><strong>User Feedback:</strong> Provides immediate visual confirmation when new entries are added</li>
-                        <li><strong>Educational Value:</strong> Helps understand the data flow and storage mechanisms</li>
-                        <li><strong>Professional Polish:</strong> Adds a dashboard-like element that enhances user experience</li>
-                        <li><strong>Debugging Aid:</strong> Makes it easy to verify that JSON entries are loading correctly</li>
-                    </ul>
-                    
-                    <p><strong>Technical Implementation:</strong></p>
-                    <ul>
-                        <li>Uses <code>fetch()</code> API to get JSON data asynchronously</li>
-                        <li>DOM manipulation to create and update counter elements</li>
-                        <li>CSS Grid for responsive layout of statistics</li>
-                        <li>Event listeners for manual refresh functionality</li>
-                        <li>Error handling for missing JSON files</li>
-                    </ul>
-                    
-                    <p>This feature transforms the PWA from a simple journal into a data-driven application that clearly demonstrates the Python-JavaScript integration required for Lab 5.</p>
-                </div>
+                    <p>Added an interactive statistics dashboard that counts and categorises data based on their source (JSON/Local/Static). This clearly shows the Python-JS data flow and provides immediate feedback when new entries are added, improving both functionality and learning experience.</p>
+                    </div>
             </article>
 
             <!-- Week 4: Introduction to APIs -->
