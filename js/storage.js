@@ -247,7 +247,7 @@ async function refreshJSONData() {
         if (window.initCollapsibleSections) initCollapsibleSections();
         if (window.initClipboardAPI) initClipboardAPI();
         
-        showSuccessMessage(`✅ Loaded ${jsonReflections.length} entries from Python JSON backend`);
+        showSuccessMessage(`Loaded ${jsonReflections.length} entries from Python JSON backend`);
     } catch (error) {
         console.error('Error refreshing JSON data:', error);
         showErrorMessage('Error refreshing JSON data. Make sure reflections.json exists in backend folder.');
