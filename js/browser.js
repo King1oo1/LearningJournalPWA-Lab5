@@ -1,7 +1,5 @@
 // js/browser.js - Browser API Functions
 
-// js/browser.js - Browser API Functions
-
 // ===== BROWSER API: CLIPBOARD API =====
 function initClipboardAPI() {
     console.log('Initializing Clipboard API...');
@@ -17,7 +15,7 @@ function initClipboardAPI() {
                 return;
             }
             
-            e.stopPropagation(); // Prevent triggering collapsible toggle
+            e.stopPropagation(); 
             
             const title = entry.querySelector('h2')?.textContent || 'Untitled';
             const contentElement = entry.querySelector('.collapsible-content');
